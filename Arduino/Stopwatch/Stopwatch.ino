@@ -16,6 +16,13 @@ volatile uint8_t digit_3;
 volatile uint8_t digit_4;
 volatile uint8_t digit_5;
 
+uint8_t digits[] = {digit_0,
+                    digit_1,
+                    digit_2,
+                    digit_3,
+                    digit_4,
+                    digit_5};
+
 volatile bool counting = false;
 volatile uint8_t digitIterator;
 // Pin definitions for 7448
@@ -59,8 +66,10 @@ void setup() {
   //Init timer at 0
   digit_0, digit_1, digit_2, digit_3, digit_4, digit_5 = 0;
   digitIterator =0;
-  //pair_2 = 0;
-  //pair_3 = 0;
+  //Set port B as output
+  DDRB = 0xFF;
+  //Set port D as output
+  DDRD = 0xFF;
   cli();  //Disable interrupts
   TCCR2A =0; //Set timer registers to 0
   TCCR2B =0;
@@ -81,7 +90,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
+  counting=true;
 }
 
 ISR(TIMER2_COMPA_vect){
@@ -93,6 +102,7 @@ ISR(TIMER2_COMPA_vect){
     digitalWrite(13, !digitalRead(13));
   }
   UpdateDisplays();
+  
   
 }
 void _incrementTime(){
@@ -128,8 +138,16 @@ void UpdateDisplays()
   digitIterator ++;
   if (digitIterator == 6){
     digitIterator=0;
-    
   }
-  
-  
+  //Turn off current digit
+  PORTD = PORTD & 0x0F;
+  PORTB = PORTB & 0xF0;
+  //Replace digit
+  //Read current digit Value
+  uint8_t number = digits[digitIterator];
+  //Display new digit
+  PORTB = codedNumber[number] | PORTB ;
+  //Enable current digit
+  PORTD = cathodes[digitIterator] | PORTD;
 }
+
