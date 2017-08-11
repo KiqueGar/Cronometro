@@ -40,8 +40,7 @@ byte codedNumber[] = {B00000000,
                       B00000110,
                       B00000111,
                       B00001000,
-                      B00001001,
-                      B00001010};
+                      B00001001};
 
 //Pin definitions for 74138
 #define in138_0 5
@@ -55,7 +54,8 @@ byte cathodes[] = {B00000000,
                    B10000000,
                    B10100000};
 
-#define honk 2
+#define honk 3
+#define start 2
 //Test section
 
 
@@ -70,6 +70,11 @@ void setup() {
   DDRB = 0xFF;
   //Set port D as output
   DDRD = 0xFF;
+  //Enable inpnut with pullup
+  pinMode(start, INPUT);
+  digitalWrite(start, HIGH);
+  
+  pinMode(honk, OUTPUT);
   cli();  //Disable interrupts
   TCCR2A =0; //Set timer registers to 0
   TCCR2B =0;
@@ -83,6 +88,8 @@ void setup() {
   TIMSK2 |= (1 << OCIE2A);
   // Enable Interrupts
   sei();
+  //EIMSK |= (1<< INT0);  //Enable  external interrupt INT0
+  //EICRA |= (1<< ISC01); //Triger on falling edge
 
   //Test section
   pinMode(13, OUTPUT);
@@ -105,6 +112,12 @@ ISR(TIMER2_COMPA_vect){
   
   
 }
+
+ISR(INT0_vect){
+  //External interrupt code here
+  digitalWrite(13, LOW);
+}
+
 void _incrementTime(){
   //Increment miliseconds
   digit_0 ++;
@@ -144,10 +157,37 @@ void UpdateDisplays()
   PORTB = PORTB & 0xF0;
   //Replace digit
   //Read current digit Value
-  uint8_t number = digits[digitIterator];
+  uint8_t number = _getValue(digitIterator);
   //Display new digit
-  PORTB = codedNumber[number] | PORTB ;
+  PORTB = codedNumber[number];
   //Enable current digit
   PORTD = cathodes[digitIterator] | PORTD;
 }
 
+uint8_t _getValue(uint8_t index){
+  if(index == 0){
+    return digit_0;
+  }
+  
+  if(index == 1){
+    return digit_1;
+  }
+  
+  if(index == 2){
+    return digit_2;
+  }
+  
+  if(index == 3){
+    return digit_3;
+  }
+  
+  if(index == 4){
+    return digit_4;
+  }
+  
+  if(index == 5){
+    return digit_5;
+  }
+  
+}
+  
